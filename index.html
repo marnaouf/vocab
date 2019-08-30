@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vocab Test</title>
   <script src="https://unpkg.com/vue"></script>
@@ -26,6 +27,7 @@
     <button @click.prevent="knowWord(true)">Yes</button>
     <button @click.prevent="knowWord(false)">No</button>
     <h2>Score: {{score}}</h2>
+    <h4>{{words.length}} words remaining...</h4>
   </div>
 </div>
 
@@ -55,16 +57,21 @@
           })
           .then(res => {
             this.words = res.split('\n');
+            console.log(this.words.length)
             this.loading = false;
             this.nextWord();
           })
       },
       randomWord() {
-        return this.words[Math.floor(Math.random() * this.words.length)];
+        const i = Math.floor(Math.random() * this.words.length);
+        const word = this.words[i];
+        this.words.splice(i,1);
+        return word;
       },
       nextWord() {
         this.word = this.randomWord()
       },
+
       knowWord(theyDo) {
         if (theyDo) {
           ++this.score;
