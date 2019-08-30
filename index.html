@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vocab Test</title>
+  <script src="https://unpkg.com/vue"></script>
+  <style>
+    * {
+      text-align: center
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+<h1>Test your Vocabulary</h1>
+  <div v-if="!started">
+  <button @click.prevent="begin()">Begin</button>
+  </div>
+  <div v-else-if="loading">
+    <h2>Loading words...</h2>
+  </div>
+  <div v-else>
+    <h3>Do you know this word?</h3>
+    <p>{{word}}</p>
+    <button @click.prevent="knowWord(true)">Yes</button>
+    <button @click.prevent="knowWord(false)">No</button>
+    <h2>Score: {{score}}</h2>
+  </div>
+</div>
+
+<script>
+  var app = new Vue({
+    el: '#app',
+    data: function() {
+      return {
+        started: false,
+        word: 'cool',
+        score: 0,
+        words: [],
+        loading: false
+      }
+    },
+    methods: {
+      begin() {
+        this.started = true;
+        this.loading = true;
+        this.loadWords()
+      },
+      loadWords() {
+        fetch('https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt')
+          .then(res => {
+            this.loading = true;
+            return res.text()
+          })
+          .then(res => {
+            this.words = res.split('\n');
+            this.loading = false;
+            this.nextWord();
+          })
+      },
+      randomWord() {
+        return this.words[Math.floor(Math.random() * this.words.length)];
+      },
+      nextWord() {
+        this.word = this.randomWord()
+      },
+      knowWord(theyDo) {
+        if (theyDo) {
+          ++this.score;
+        }
+        this.nextWord()
+      }
+    }
+  })
+</script>
+</body>
+</html>
