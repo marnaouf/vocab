@@ -5,32 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vocab Test</title>
   <script src="https://unpkg.com/vue"></script>
+  <script src="js/espeakng.js"></script>
   <style>
     * {
       text-align: center
     }
   </style>
+  <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/solid.min.css">
 </head>
 
 <body>
-<div id="app">
-<h1>Test your Vocabulary</h1>
-  <div v-if="!started">
-  <button @click.prevent="begin()">Begin</button>
-  </div>
-  <div v-else-if="loading">
-    <h2>Loading words...</h2>
-  </div>
-  <div v-else>
-    <h3>Do you know this word?</h3>
-    <p>{{word}}</p>
-    <button @click.prevent="knowWord(true)">Yes</button>
-    <button @click.prevent="knowWord(false)">No</button>
-    <h2>Score: {{score}}</h2>
-    <h4>{{words.length}} words remaining...</h4>
-  </div>
+  <div id="app">
+    <h1>Test your Vocabulary</h1>
+    <div v-if="!started">
+    <button @click.prevent="begin()">Begin</button>
+    </div>
+    <div v-else-if="loading">
+      <h2>Loading words...</h2>
+    </div>
+    <div v-else>
+      <h3>Do you know this word?</h3>
+      <p>{{word}}</p>
+      <button @click.prevent="speak(word)">Yes</button>
+      <button @click.prevent="knowWord(false)">No</button>
+      <h2>Score: {{score}}</h2>
+      <h4>{{words.length}} words remaining...</h4>
+    </div>
 </div>
+<script>
+  let tts = new eSpeakNG('js/espeakng.worker.js', function(){
+    console.log('asdasd')
+  })
 
+</script>
 <script>
   var app = new Vue({
     el: '#app',
@@ -40,14 +48,15 @@
         word: 'cool',
         score: 0,
         words: [],
-        loading: false
+        loading: false,
+        tts: {}
       }
     },
     methods: {
       begin() {
         this.started = true;
         this.loading = true;
-        this.loadWords()
+        this.loadWords();
       },
       loadWords() {
         fetch('https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt')
@@ -61,6 +70,13 @@
             this.loading = false;
             this.nextWord();
           })
+      },
+      speak(word) {
+        console.log('asdasd');
+        tts.synthesize(word, (samples, events) => {
+          console.log(samples, events)
+        })
+
       },
       randomWord() {
         const i = Math.floor(Math.random() * this.words.length);
