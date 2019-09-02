@@ -34,9 +34,15 @@
     </div>
 </div>
 <script>
+  console.log('Initializing Espeak');
   let tts = new eSpeakNG('js/espeakng.worker.js', function(){
-    console.log('asdasd')
+    tts.set_rate(175);
+    tts.set_pitch(50);
+    tts.set_voice('gmw/en');
+    console.log('Espeak Initialized')
   })
+  let audioCtx = new window.AudioContext()  ;
+  let source = audioCtx.createBufferSource();
 
 </script>
 <script>
@@ -72,9 +78,31 @@
           })
       },
       speak(word) {
-        console.log('asdasd');
-        tts.synthesize(word, (samples, events) => {
-          console.log(samples, events)
+        let samplesArr= [];
+        tts.synthesize('tits', (samples, events) => {
+          if (!samples) {
+            const length = samplesArr.reduce((l, s) => l + s.length, 0 );
+            console.log(length)
+            let index = 0;
+            const audioData = samplesArr.reduce((a, s) => {
+              a.set(s, index);
+              index += s.length;
+              return a;
+            }, new Uint8Array(length));
+            console.log(audioData.buffer);
+            audioCtx.decodeAudioData(audioData.buffer, function(buffer) {
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.start(0)
+              },
+              function(e){ console.log("Error with decoding audio data" + e.err); });
+            return;
+          }
+          // I dunno if recieving an empty samples value only happens at the end of the synthesis or if it could happen
+          // at any time during synthesis so I'm going to handle it here and not in the above block
+          if (samples.byteLength) samplesArr.push(new Uint8Array(samples))
+
+
         })
 
       },

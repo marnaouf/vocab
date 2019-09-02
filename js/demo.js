@@ -184,6 +184,7 @@ function speak() {
   tts.synthesize(
     document.getElementById('texttospeak').value,
     function cb(samples, events) {
+      console.log('ASDSDADS', samples)
       //console.log('  Inside synt cb');
       if (!samples) {
         if (pusher) {
