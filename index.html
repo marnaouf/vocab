@@ -26,8 +26,8 @@
     </div>
     <div v-else>
       <h3>Do you know this word?</h3>
-      <p>{{word}}</p>
-      <button @click.prevent="speak(word)">Yes</button>
+      <p>{{word}}&nbsp;<img  @click.prevent="speak(word)" src="assets/speaker.svg" height="18rem"/></p>
+      <button @click.prevent="knowWord(true)">Yes</button>
       <button @click.prevent="knowWord(false)">No</button>
       <h2>Score: {{score}}</h2>
       <h4>{{words.length}} words remaining...</h4>
@@ -39,10 +39,9 @@
     tts.set_rate(175);
     tts.set_pitch(50);
     tts.set_voice('gmw/en');
-    console.log('Espeak Initialized')
-  })
+    console.log('Espeak Initialized');
+  });
   let audioCtx = new window.AudioContext()  ;
-  let source = audioCtx.createBufferSource();
 
 </script>
 <script>
@@ -79,28 +78,26 @@
       },
       speak(word) {
         let samplesArr= [];
-        tts.synthesize('tits', (samples, events) => {
+        let length = 0;
+        tts.synthesize(word, (samples, events) => {
           if (!samples) {
-            const length = samplesArr.reduce((l, s) => l + s.length, 0 );
-            console.log(length)
-            let index = 0;
-            const audioData = samplesArr.reduce((a, s) => {
-              a.set(s, index);
-              index += s.length;
-              return a;
-            }, new Uint8Array(length));
-            console.log(audioData.buffer);
-            audioCtx.decodeAudioData(audioData.buffer, function(buffer) {
-                source.buffer = buffer;
-                source.connect(audioCtx.destination);
-                source.start(0)
-              },
-              function(e){ console.log("Error with decoding audio data" + e.err); });
+            let source = audioCtx.createBufferSource();
+            let buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+            let offset = 0;
+            samplesArr.forEach((s) => {
+              buffer.copyToChannel(s,0,offset);
+              offset += s.length
+            });
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start();
             return;
           }
-          // I dunno if recieving an empty samples value only happens at the end of the synthesis or if it could happen
-          // at any time during synthesis so I'm going to handle it here and not in the above block
-          if (samples.byteLength) samplesArr.push(new Uint8Array(samples))
+          if (samples.byteLength) {
+            const samplesFloat = new Float32Array(samples);
+            length += samplesFloat.length;
+            samplesArr.push(samplesFloat)
+          }
 
 
         })

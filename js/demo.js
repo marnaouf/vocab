@@ -148,6 +148,11 @@ function stop() {
 function speak() {
   console.log('Inside speak()');
 
+  if (ctx.state === 'suspended') {
+    console.log('Resuming AudioContext...');
+    ctx.resume();
+    console.log('Resuming AudioContext... done');
+  }
   console.log('  Stopping...');
   stop();
   console.log('  Stopping... done');
@@ -179,13 +184,14 @@ function speak() {
   pusher.connect(ctx.destination);
   console.log('  Creating pusher... done');
 
+  var user_text = document.getElementById('texttospeak').value;
+
   // actual synthesis
   console.log('  Calling synthesize...');
   tts.synthesize(
-    document.getElementById('texttospeak').value,
+    user_text,
     function cb(samples, events) {
-      console.log('ASDSDADS', samples)
-      //console.log('  Inside synt cb');
+      console.log('  Receiving synthesis samples...');
       if (!samples) {
         if (pusher) {
           pusher.close();
@@ -205,9 +211,29 @@ function speak() {
     } // end of function cb
   ); // end of tts.synthesize()
   console.log('  Calling synthesize... done');
-
   console.log('Leaving speak()');
 } // end of speak()
+
+function ipa() {
+
+  console.log("Synthesizing ipa ... ");
+  var ts = new Date();
+  var user_text = document.getElementById('texttospeak').value;
+
+  //user_text = user_text.repeat(50);
+
+  tts.set_voice(document.getElementById('voice').value);
+  tts.synthesize_ipa(user_text, function(result) {
+    var te = new Date();
+    document.getElementById('ipaarea').value = result.ipa;
+    console.log("Ipa synthesis done in " + (te-ts) + " ms.")
+  });
+}
+
+function speakAndIpa() {
+  speak();
+  ipa();
+}
 
 function resetPitch() {
   document.getElementById('pitch').value = 50;
@@ -241,7 +267,7 @@ function initializeDemo() {
             opt.value = voice.identifier;
             console.log('Adding voice: ' + opt.text);
             sel.add(opt);
-            if (voice.name === 'english') {
+            if (voice.name === 'English (Great Britain)') {
               opt.id = 'default-voice';
               opt.selected = true;
             }
@@ -255,5 +281,6 @@ function initializeDemo() {
       console.log('Leaving cb1');
     } // end of function cb1
   );
+
   console.log('Creating eSpeakNG instance... done');
 }
